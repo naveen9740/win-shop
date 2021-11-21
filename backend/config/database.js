@@ -6,7 +6,6 @@ const connectDatabase = () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     })
-    .then((data) => console.log(`mongoose connected ${data.connection.host}`))
-    .catch((error) => console.log(error));
+    .then((data) => console.log(`mongoose connected ${data.connection.host}`));
 };
 module.exports = connectDatabase;
