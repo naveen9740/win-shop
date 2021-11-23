@@ -101,3 +101,82 @@ exports.resetPassword = catchAsyncError(async (req, res, next) => {
   await user.save();
   sendToken(user, 200, res);
 });
+
+// Get User Detail
+exports.getUserDetail = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  res.json({ success: true, user });
+});
+
+// update User Password
+exports.updatePassword = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user.id).select("+password");
+  const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
+  if (!isPasswordMatched) {
+    return next(new ErrorHandler("old Password is incorrect", 400));
+  }
+  if (req.body.newPassword !== req.body.confirmPassword) {
+    return next(new ErrorHandler("Passwords does not match", 400));
+  }
+  user.password = req.body.newPassword;
+  await user.save();
+  sendToken(user, 200, res);
+  res.json({ success: true, user });
+});
+
+// update User Profile
+exports.updateProfile = catchAsyncError(async (req, res, next) => {
+  const newUserData = { name: req.body.name, email: req.body.email };
+
+  const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  res.json({ success: true, message: "Profile updated" });
+});
+
+// get all users
+exports.getAllUsers = catchAsyncError(async (req, res, next) => {
+  const users = await User.find();
+  res.json({ success: true, users });
+});
+
+// get single user details
+exports.getSingleUser = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(
+      new ErrorHandler(`User Does Not Exist with id ${req.params.id}`)
+    );
+  }
+  res.json({ success: true, user });
+});
+
+// update User Role
+exports.updateRole = catchAsyncError(async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+    role: req.body.role,
+  };
+
+  const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  res.json({ success: true, message: "Profile updated" });
+});
+
+// delete User Profile
+exports.deleteProfile = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    return next(new ErrorHandler("User does not exist with this id", 400));
+  }
+  res.json({ success: true, message: `Profile Deleted`, user });
+  await user.remove();
+});
